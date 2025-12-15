@@ -8,7 +8,6 @@
   </head>
   <body>
     <div class="app-container">
-      <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-header">
           <h1>Notes</h1>
@@ -33,7 +32,6 @@
           </div>
         </div>
 
-        <!-- Search -->
         <div class="search-container">
           <input
             type="text"
@@ -43,7 +41,6 @@
           />
         </div>
 
-        <!-- Auth Section -->
         <div class="auth-section">
           <div id="userInfo" class="user-info hidden">
             <img id="userPhoto" src="" alt="User" class="user-photo" />
@@ -52,13 +49,10 @@
           <button id="authBtn" class="btn btn-auth">Sign in with Google</button>
         </div>
 
-        <!-- Notes List -->
         <div class="notes-list" id="notesList">
-          <!-- Notes will be rendered here -->
         </div>
       </aside>
 
-      <!-- Main Editor -->
       <main class="editor-container">
         <div class="editor-header">
           <div class="editor-actions">
@@ -98,13 +92,10 @@
       </main>
     </div>
 
-    <!-- Firebase SDKs -->
-    <!-- Firebase compat SDKs (working version) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-    <!-- App Script -->
     <script src="app.js"></script>
   </body>
 </html>

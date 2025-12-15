@@ -1,14 +1,13 @@
 :root {
-    /* Color system inspired by reference */
-    --bg: #EBE7DC;                /* warm light background */
-    --card: #FFFFFF;              /* white cards */
-    --card-soft: #F6F3E8;         /* soft off‑white */
-    --muted: #8D8A82;             /* muted text */
-    --text: #080808;              /* primary text (near black) */
-    --text-secondary: #3c3a35;    /* secondary text */
-    --accent-yellow: #F6F33E;     /* bright highlight yellow */
+    --bg: #EBE7DC;
+    --card: #FFFFFF;
+    --card-soft: #F6F3E8;
+    --muted: #8D8A82;
+    --text: #080808;
+    --text-secondary: #3c3a35;
+    --accent-yellow: #F6F33E;
     --accent-yellow-dark: #E0DD2F;
-    --primary: #080808;           /* primary action (near black) */
+    --primary: #080808;
     --primary-hover: #161616;
     --danger: #ef4444;
     --danger-hover: #dc2626;
@@ -18,17 +17,16 @@
     --shadow-soft: 0 18px 45px rgba(0, 0, 0, 0.12);
 }
 
-/* Dark mode overrides (inspired by dashboard reference: deep neutral + orange accent) */
 :root[data-theme="dark"] {
-    --bg: #050506;              /* page background */
-    --card: #111315;            /* main card background */
-    --card-soft: #181a1f;       /* slightly lighter surfaces */
-    --muted: #8f939c;           /* muted text/icons */
-    --text: #f9fafb;            /* main text */
-    --text-secondary: #d1d5db;  /* secondary text */
-    --accent-yellow: #f97316;   /* orange accent for selected items/buttons */
+    --bg: #050506;
+    --card: #111315;
+    --card-soft: #181a1f;
+    --muted: #8f939c;
+    --text: #f9fafb;
+    --text-secondary: #d1d5db;
+    --accent-yellow: #f97316;
     --accent-yellow-dark: #ea580c;
-    --primary: #f97316;         /* primary button */
+    --primary: #f97316;
     --primary-hover: #ea580c;
     --danger: #f97373;
     --danger-hover: #dc2626;
@@ -42,7 +40,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* smooth theme transitions */
     transition:
         background-color 0.28s ease,
         color 0.28s ease,
@@ -67,7 +64,6 @@ body {
     gap: 1.75rem;
 }
 
-/* Sidebar */
 .sidebar {
     width: 320px;
     background: var(--card);
@@ -170,9 +166,8 @@ body {
     overflow-y: auto;
     padding: 0.75rem 1.1rem 1.25rem;
     background: var(--card);
-    /* hide native scrollbar but keep scroll */
-    scrollbar-width: none;          /* Firefox */
-    -ms-overflow-style: none;       /* IE/Edge legacy */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
 
 .note-item {
@@ -225,7 +220,6 @@ body {
     font-size: 0.9rem;
 }
 
-/* Editor */
 .editor-container {
     flex: 1;
     display: flex;
@@ -252,7 +246,6 @@ body {
     background: var(--card);
     border-radius: 32px;
     box-shadow: var(--shadow-soft);
-    /* hide native scrollbar but keep scroll */
     scrollbar-width: none;
     -ms-overflow-style: none;
 }
@@ -311,7 +304,6 @@ body {
     color: var(--muted);
 }
 
-/* Buttons */
 .btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -369,7 +361,6 @@ body {
     background: var(--accent-yellow-dark);
 }
 
-/* Responsive */
 @media (max-width: 768px) {
     body {
         overflow: auto;
@@ -441,12 +432,11 @@ body {
     }
 }
 
-/* Scrollbar */
 .notes-list::-webkit-scrollbar,
 .editor-content::-webkit-scrollbar {
     width: 0;
     height: 0;
-    display: none; /* Chrome/Safari/Edge */
+    display: none;
 }
 
 .notes-list::-webkit-scrollbar-track,

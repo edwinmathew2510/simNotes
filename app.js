@@ -1,33 +1,19 @@
-// app.js — improved, robust version of your code
-// Notes:
-// - Local storage key: notes_app_v1 (array of note objects)
-// - Cloud: users/{uid} doc, field "notes" (array)
-// - Merge strategy: for each note id pick the note with larger updatedAt
-// - Debounce: local save 350ms, cloud push 900ms
-// - Uses Firebase compat API (matches your SDK <script> tags)
-
-///// CONFIG /////
 const firebaseConfig = {
   apiKey: "AIzaSyBc_xHf1wiQX0EbtrlgNg9TJyFrBYcrA9M",
   authDomain: "simnotes-5d6dc.firebaseapp.com",
   projectId: "simnotes-5d6dc",
-  // NOTE: confirm this value in Firebase Console -> Project settings -> Storage bucket.
-  // Common default pattern is: "<project-id>.appspot.com"
   storageBucket: "simnotes-5d6dc.appspot.com",
   messagingSenderId: "455811987726",
   appId: "1:455811987726:web:97baa93d5535f05173bf5f",
 };
 
-///// SANITY WAIT + BOOT /////
 function initApp() {
-  // Retry if firebase SDK isn't available yet
   if (typeof firebase === "undefined") {
     console.warn("Firebase SDK not loaded yet — retrying in 100ms...");
     setTimeout(initApp, 100);
     return;
   }
 
-  // Initialize firebase app once
   try {
     if (!firebase.apps || firebase.apps.length === 0) {
       firebase.initializeApp(firebaseConfig);
@@ -40,7 +26,6 @@ function initApp() {
     return;
   }
 
-  // DOM-ready guard
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", startApp);
   } else {
@@ -48,11 +33,9 @@ function initApp() {
   }
 }
 
-///// APP START /////
 function startApp() {
   console.log("Starting Notes app...");
 
-  // DOM references (must match your HTML)
   const notesListEl = document.getElementById("notesList");
   const noteTitleEl = document.getElementById("noteTitle");
   const noteBodyEl = document.getElementById("noteBody");
@@ -70,7 +53,6 @@ function startApp() {
   const userPhotoEl = document.getElementById("userPhoto");
   const lastSavedEl = document.getElementById("lastSaved");
 
-  // quick DOM sanity
   if (!notesListEl || !noteTitleEl || !noteBodyEl || !authBtn) {
     console.error("Missing critical DOM elements; aborting init.", {
       notesListEl,
@@ -81,14 +63,13 @@ function startApp() {
     return;
   }
 
-  // constants & state
   const STORAGE_KEY = "notes_app_v1";
   const DELETED_KEY = "notes_deleted_v1";
   const THEME_KEY = "notes_theme_v1";
   const LOCAL_DEBOUNCE_MS = 350;
   const CLOUD_DEBOUNCE_MS = 900;
 
-  let notes = []; // Array of { id, title, body, updatedAt (ISO string) }
+  let notes = [];
   let currentNoteId = null;
   let saveDebounce = null;
   let cloudDebounce = null;
@@ -99,7 +80,6 @@ function startApp() {
   const db = firebase.firestore();
   const provider = new firebase.auth.GoogleAuthProvider();
 
-  ///// utilities /////
   function generateId() {
     return (
       Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 9)
@@ -134,7 +114,6 @@ function startApp() {
     return div.innerHTML;
   }
 
-  ///// local storage /////
   function loadFromLocal() {
     const raw = localStorage.getItem(STORAGE_KEY);
     const parsed = safeParseJSON(raw);
@@ -169,7 +148,6 @@ function startApp() {
     }
   }
 
-  ///// theme /////
   function applyTheme(theme) {
     const t = theme === "dark" ? "dark" : "light";
     const root = document.documentElement;
@@ -190,7 +168,6 @@ function startApp() {
   function saveToLocal() {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-      // update last saved UI (for selected)
       const cur = notes.find((n) => n.id === currentNoteId);
       if (cur && lastSavedEl)
         lastSavedEl.textContent = `Last saved: ${formatTime(cur.updatedAt)}`;
@@ -201,7 +178,6 @@ function startApp() {
     }
   }
 
-  ///// rendering /////
   function renderNotes(filter = "") {
     if (!notesListEl) return;
     const q = (filter || "").trim().toLowerCase();
@@ -235,7 +211,6 @@ function startApp() {
       })
       .join("");
 
-    // attach handlers
     notesListEl.querySelectorAll(".note-item").forEach((el) => {
       el.onclick = () => {
         const id = el.getAttribute("data-id");
@@ -258,19 +233,16 @@ function startApp() {
     noteTitleEl.disabled = false;
     noteBodyEl.disabled = false;
     deleteBtn.disabled = false;
-    // set values (don't preserve caret — acceptable for MVP)
     noteTitleEl.value = note.title || "";
     noteBodyEl.value = note.body || "";
     if (lastSavedEl)
       lastSavedEl.textContent = `Last saved: ${formatTime(note.updatedAt)}`;
   }
 
-  ///// selection / CRUD /////
   function selectNote(id) {
     currentNoteId = id;
     renderNotes(searchInput ? searchInput.value : "");
     renderEditor();
-    // focus body for typing
     setTimeout(() => {
       if (document.activeElement !== noteBodyEl) noteBodyEl.focus();
     }, 50);
@@ -311,7 +283,6 @@ function startApp() {
     scheduleCloudPush();
   }
 
-  ///// editor autosave (debounced local save) /////
   function scheduleLocalSave() {
     if (!currentNoteId) return;
     const note = notes.find((n) => n.id === currentNoteId);
@@ -321,18 +292,16 @@ function startApp() {
     note.body = noteBodyEl.value || "";
     note.updatedAt = nowISO();
 
-    // update UI optimistic
     renderNotes(searchInput ? searchInput.value : "");
     if (lastSavedEl) lastSavedEl.textContent = "Saving...";
 
     clearTimeout(saveDebounce);
     saveDebounce = setTimeout(() => {
       saveToLocal();
-      scheduleCloudPush(); // sync to cloud after local saved
+      scheduleCloudPush();
     }, LOCAL_DEBOUNCE_MS);
   }
 
-  ///// import / export /////
   function exportNotes() {
     try {
       const blob = new Blob([JSON.stringify(notes, null, 2)], {
@@ -359,9 +328,7 @@ function startApp() {
       try {
         const imported = safeParseJSON(ev.target.result);
         if (!Array.isArray(imported)) {
-          // Accept either array or object map for compatibility
           if (imported && typeof imported === "object") {
-            // convert object map to array
             const arr = Object.values(imported);
             mergeImported(arr);
           } else {
@@ -382,7 +349,6 @@ function startApp() {
   }
 
   function mergeImported(importedArray) {
-    // merge by id, choose larger updatedAt
     const map = new Map(notes.map((n) => [n.id, n]));
     let added = 0,
       updated = 0;
@@ -410,13 +376,10 @@ function startApp() {
     alert(`Import complete — added: ${added}, updated: ${updated}`);
   }
 
-  ///// cloud sync helpers /////
-  // Merge remote array into local array (per-note updatedAt wins)
   function mergeRemoteNotesArray(remoteArr, remoteDeletedIds = []) {
     if (!Array.isArray(remoteArr)) return;
     const remoteDeletedSet = new Set(remoteDeletedIds || []);
 
-    // sync remote deletions into local cache
     let deletedChanged = false;
     remoteDeletedSet.forEach((id) => {
       if (id && !deletedIds.has(id)) {
@@ -430,7 +393,6 @@ function startApp() {
 
     const map = new Map();
 
-    // seed with remote notes (excluding deleted)
     remoteArr.forEach((rn) => {
       if (!rn || !rn.id || blockedIds.has(rn.id)) return;
       map.set(rn.id, {
@@ -441,7 +403,6 @@ function startApp() {
       });
     });
 
-    // merge current local notes to preserve unsynced changes
     notes.forEach((local) => {
       if (!local || !local.id || blockedIds.has(local.id)) return;
       const existing = map.get(local.id);
@@ -463,7 +424,6 @@ function startApp() {
     );
     saveToLocal();
     renderNotes(searchInput ? searchInput.value : "");
-    // refresh editor if not editing
     if (
       currentNoteId &&
       document.activeElement !== noteTitleEl &&
@@ -479,28 +439,24 @@ function startApp() {
     }
   }
 
-  // Debounced push to Firestore
   function scheduleCloudPush() {
     const user = auth.currentUser;
-    if (!user) return; // offline behaviour: only local
+    if (!user) return;
     clearTimeout(cloudDebounce);
     cloudDebounce = setTimeout(async () => {
       try {
         const userRef = db.collection("users").doc(user.uid);
 
-        // Read remote to merge server-side to avoid overwriting someone else's edits
         const doc = await userRef.get();
         const data = doc.exists ? doc.data() : {};
         const remote = data && Array.isArray(data.notes) ? data.notes : [];
         const remoteDeleted =
           data && Array.isArray(data.deletedIds) ? data.deletedIds : [];
-        // convert remote to map for merging
         const remoteMap = new Map((remote || []).map((n) => [n.id, n]));
-        const mergedMap = new Map(remoteMap); // start with remote
+        const mergedMap = new Map(remoteMap);
         const pendingDeletes = new Set(deletedIds);
         const mergedDeletedSet = new Set([...remoteDeleted, ...pendingDeletes]);
 
-        // For each local note, pick the most recent
         notes.forEach((localN) => {
           const rn = mergedMap.get(localN.id);
           if (
@@ -515,7 +471,6 @@ function startApp() {
             });
           }
         });
-        // remove any notes that were marked deleted (remote or local)
         mergedDeletedSet.forEach((id) => mergedMap.delete(id));
         const mergedArray = Array.from(mergedMap.values());
         await userRef.set(
@@ -526,11 +481,9 @@ function startApp() {
           },
           { merge: true }
         );
-        // clear any deletes that successfully synced
         pendingDeletes.forEach((id) => deletedIds.delete(id));
         saveDeletedToLocal();
         console.log("Pushed merged notes to cloud:", mergedArray.length);
-        // update last saved UI for selected
         const cur = notes.find((n) => n.id === currentNoteId);
         if (cur && lastSavedEl)
           lastSavedEl.textContent = `Last saved: ${formatTime(cur.updatedAt)}`;
@@ -540,7 +493,6 @@ function startApp() {
     }, CLOUD_DEBOUNCE_MS);
   }
 
-  // Start real-time listener for user's doc
   function startRealtimeSync(uid) {
     stopRealtimeSync();
     try {
@@ -558,7 +510,6 @@ function startApp() {
         }
       );
 
-      // initial pull
       userRef
         .get()
         .then((doc) => {
@@ -568,7 +519,6 @@ function startApp() {
             const remoteDeleted = data.deletedIds || [];
             mergeRemoteNotesArray(remote, remoteDeleted);
           } else {
-            // if no remote document exists, push local to cloud
             scheduleCloudPush();
           }
         })
@@ -591,7 +541,6 @@ function startApp() {
     }
   }
 
-  ///// auth actions /////
   async function toggleAuth() {
     const user = auth.currentUser;
     if (user) {
@@ -626,16 +575,13 @@ function startApp() {
     (user) => {
       console.log("Auth state change:", user ? user.email : "signed out");
       if (user) {
-        // UI
         if (userInfoEl) userInfoEl.classList.remove("hidden");
         if (userNameEl)
           userNameEl.textContent = user.displayName || user.email || "";
         if (userPhotoEl) userPhotoEl.src = user.photoURL || "";
         if (authBtn) authBtn.textContent = "Sign out";
 
-        // start cloud sync
         startRealtimeSync(user.uid);
-        // ensure local wins if it's newer
         scheduleCloudPush();
       } else {
         if (userInfoEl) userInfoEl.classList.add("hidden");
@@ -648,7 +594,6 @@ function startApp() {
     }
   );
 
-  ///// event wiring /////
   if (newNoteBtn)
     newNoteBtn.addEventListener("click", (e) => {
       e.preventDefault();
@@ -706,7 +651,6 @@ function startApp() {
   if (noteTitleEl) noteTitleEl.addEventListener("input", scheduleLocalSave);
   if (noteBodyEl) noteBodyEl.addEventListener("input", scheduleLocalSave);
 
-  // keyboard shortcut: new note
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "n") {
       e.preventDefault();
@@ -714,7 +658,6 @@ function startApp() {
     }
   });
 
-  ///// boot from local /////
   initTheme();
   loadDeletedFromLocal();
   loadFromLocal();
@@ -722,7 +665,6 @@ function startApp() {
   if (notes.length > 0) {
     selectNote(notes[0].id);
   } else {
-    // keep editor disabled
     noteTitleEl.value = "";
     noteBodyEl.value = "";
     noteTitleEl.disabled = true;
@@ -731,7 +673,6 @@ function startApp() {
   }
 
   console.log("Notes app ready. Local notes:", notes.length);
-} // end startApp
+}
 
-// Start init
 initApp();
