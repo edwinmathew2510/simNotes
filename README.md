@@ -12,7 +12,6 @@ SimNotes is a simple, fast, browser-based notes application with Google Authenti
 - Create, edit, and delete notes
 - Cloud-synced notes across devices
 - Desktop + Mobile compatible
-- Import and export notes as JSON
 - Dark mode toggle
 - Search notes
 - Firebase Hosting deployment
